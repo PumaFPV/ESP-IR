@@ -1,7 +1,7 @@
 #ifndef _ARDUINO_GC9A01_H_
 #define _ARDUINO_GC9A01_H_
 
-#include <Arduino.h>
+#include "Arduino.h"
 #include <Print.h>
 #include "./Arduino_GFX.h"
 #include "../Arduino_TFT.h"

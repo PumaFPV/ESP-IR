@@ -5,7 +5,7 @@
 #ifndef _ARDUINO_DATABUS_H_
 #define _ARDUINO_DATABUS_H_
 
-#include <Arduino.h>
+#include "Arduino.h"
 
 #define GFX_NOT_DEFINED -1
 

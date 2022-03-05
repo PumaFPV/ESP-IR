@@ -15,7 +15,7 @@
 #define FLIR_MISO 12  
 #define FLIR_SCLK 14  
 #define FLIR_CS 15  //Active LOW
-#define FLIR_SPI_FREQUENCY 2000000 //2MHz,can go up to 20MHz
+#define FLIR_SPI_FREQUENCY 8000000 //4MHz,can go up to 20MHz
 #define FLIR_SDA 17
 #define FLIR_SCL 16
 #define FLIR_I2C_FREQUENCY 400000
@@ -45,10 +45,10 @@
 #define VOSPI_REFRES_RATE 27 //27Hz of VOSPI frame refresh rate, so each frame is sent 3 times
 
 
-#include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino_GFX_Library.h>
+#include "esp32/Arduino.h"
+#include "Wire.h"
+#include "SPI.h"
+#include "Arduino_GFX_Library.h"
 
 const uint8_t  ledChannel = 0;
 const uint16_t ledFrequency = 5000;
@@ -70,7 +70,12 @@ uint16_t flirToGreyScale(uint8_t flirColor);
 
 void flirSync();
 void flirReadVOSPIPacket();
-
+uint8_t flirVOSPIPacket[160];
+uint16_t flirPacketID;
+uint16_t flirPacketCRC;
+bool lastPacketWasDiscard = 0;
+uint8_t flirFrameLine = 0;
+uint8_t flirDiscardCounter = 0;
 #include "buffer.h"
 #include "flir.h"
 #include "display.h"
@@ -80,46 +85,54 @@ bool runonce = 0;
 void setup() 
 {
   Serial.begin(115200);
+  Serial.println("ESP-IR started");
 
   displaySetup();
 
   Wire.begin(FLIR_SDA, FLIR_SCL, FLIR_I2C_FREQUENCY); 
   
   flirSPI = new SPIClass(HSPI);
-  flirSPI->setDataMode(SPI_MODE3);  //SPI_MODE3 = CPOL = 1 CPHA = 1, SCK HIGH when idle, read data on rising edge of clock, MSB first
-  //flirSPI->setClockDivider(0);
-  flirSPI->setFrequency(FLIR_SPI_FREQUENCY);
   flirSPI->begin(FLIR_SCLK, FLIR_MISO, FLIR_MOSI, FLIR_CS); 
   pinMode(FLIR_CS, OUTPUT);
-  digitalWrite(FLIR_CS, LOW);
+  digitalWrite(FLIR_CS, HIGH);
 
 }
 
 void loop() 
 {
-  if(runonce == 0)
+
+  flirReadVOSPIPacket();
+  uint8_t discardPacket = (flirPacketID & 0b0000111100000000) >> 8;
+
+  if(discardPacket == 0x0F) //if discard frame
+  {
+    //discard
+    flirFrameLine = 0;
+    flirDiscardCounter++;
+  }
+  else
+  {
+    //Not discard
+    flirDiscardCounter = 0;
+    for(int i = 0; i < FLIR_VOSPI_PAYLOAD_LENGTH; i = i+2)
+    {
+      uint8_t pixel = (flirVOSPIPacket[i] << 8) | flirVOSPIPacket[i + 1]; 
+      flirBuffer[flirFrameLine][i/2] = pixel;
+    }
+    flirFrameLine++;
+  } 
+  
+  if(flirFrameLine > 59)
   {
     drawBufferToDisplay();
-    
-    runonce = 1;
-  }
-  
-  flirReadVOSPIPacket();
-  //int data = 0x00;
-  /*
-  data = flirSPI->transfer(0x00) << 8;
-  data |= flirSPI->transfer(0x00);
-*/
-  //data = flirSPI->transfer16(0x0000);
-  
-  /*if((data & 0x0F00) == FLIR_VOSPI_DISCARD_PACKET)
-  {
-    Serial.println("Discard frame :(");
-    lepton_sync();
-    Serial.println("sync done");
-  }
-  */
+    flirFrameLine = 0;
+  } 
 
+  if(flirDiscardCounter > 60)
+  {
+    //flirSync();
+    flirDiscardCounter = 0;
+  }
 }
 
 
