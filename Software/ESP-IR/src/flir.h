@@ -6,11 +6,6 @@ void flirSync()
 
 }
 
-void flirgetVOSPIFrame()
-{
-
-}
-
 void flirReadVOSPIPacket()
 {
   digitalWrite(FLIR_CS, LOW);
@@ -28,35 +23,3 @@ void flirReadVOSPIPacket()
   digitalWrite(FLIR_CS, HIGH);
 
 }
-
-
-/*
-
-void lepton_sync(void)
-{
-  int i;
-  int data = 0x0f;
-
-  digitalWrite(8, HIGH);
-  delay(185);
-  while (data & 0x0f == 0x0f)
-{
-    digitalWrite(8, LOW);
-    data =  flirSPI->transfer(0x00) << 8;
-    data |= flirSPI->transfer(0x00);
-    digitalWrite(8, HIGH);
-
-    for (i = 0; i < ((164 - 2) / 2); i++)
-    {
-
-    digitalWrite(8, LOW);
-
-      flirSPI->transfer(0x00);
-      flirSPI->transfer(0x00);
-
-    digitalWrite(8, HIGH);
-    }
-  }
-
-}
-*/

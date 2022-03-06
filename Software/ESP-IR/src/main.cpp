@@ -52,8 +52,8 @@
 
 const uint8_t  ledChannel = 0;
 const uint16_t ledFrequency = 5000;
-const uint8_t  ledResolution = 3; //8 steps
-const uint8_t  ledBrightness = 1;
+const uint8_t  ledResolution = 3; //in bits, so here 8 steps
+const uint8_t  ledBrightness = 1; // brightness can be set between 0 and 8
 
 Arduino_DataBus *bus = create_default_Arduino_DataBus();
 
@@ -102,7 +102,7 @@ void loop()
 {
 
   flirReadVOSPIPacket();
-  uint8_t discardPacket = (flirPacketID & 0b0000111100000000) >> 8;
+  uint8_t discardPacket = (flirPacketID & 0x0F00) >> 8;
 
   if(discardPacket == 0x0F) //if discard frame
   {
