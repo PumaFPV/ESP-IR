@@ -1,13 +1,11 @@
-void flirSync()
-{
-  digitalWrite(FLIR_CS, HIGH);
-  delay(186);
-  digitalWrite(FLIR_CS, LOW);
+void flirReadVOSPIPacket();
+void flirSync();
 
-}
+
 
 void flirReadVOSPIPacket()
 {
+
   digitalWrite(FLIR_CS, LOW);
   flirSPI->beginTransaction(SPISettings(FLIR_SPI_FREQUENCY, MSBFIRST, SPI_MODE3));
 
@@ -24,38 +22,27 @@ void flirReadVOSPIPacket()
 
 }
 
-void flirLoop()
+
+
+void flirSetup()
 {
-  flirReadVOSPIPacket();
-  uint8_t discardPacket = (flirPacketID & 0x0F00) >> 8;
 
-  if(discardPacket == 0x0F) //if discard frame
-  {
-    //discard
-    flirFrameLine = 0;
-    flirDiscardCounter++;
-  }
-  else
-  {
-    //Not discard
-    flirDiscardCounter = 0;
-    for(int i = 0; i < FLIR_VOSPI_PAYLOAD_LENGTH; i = i+2)
-    {
-      uint16_t pixel = (flirVOSPIPacket[i+1] << 8) | flirVOSPIPacket[i]; //should be uint8_t pixel = (flirVOSPIPacket[i] << 8) | flirVOSPIPacket[i+1];
-      flirBuffer[flirFrameLine][i/2] = pixel;
-    }
-    flirFrameLine++;
-  } 
+  Wire.begin(FLIR_SDA, FLIR_SCL, FLIR_I2C_FREQUENCY); 
   
-  if(flirFrameLine > 59)
-  {
-    drawBufferToDisplay();
-    flirFrameLine = 0;
-  } 
+  flirSPI = new SPIClass(HSPI);
+  flirSPI->begin(FLIR_SCLK, FLIR_MISO, FLIR_MOSI, FLIR_CS); 
+  pinMode(FLIR_CS, OUTPUT);
+  digitalWrite(FLIR_CS, HIGH);
 
-  if(flirDiscardCounter > 60)
-  {
-    //flirSync();
-    flirDiscardCounter = 0;
-  }
+}
+
+
+
+void flirSync()
+{
+
+  digitalWrite(FLIR_CS, HIGH);
+  delay(186);
+  digitalWrite(FLIR_CS, LOW);
+
 }
