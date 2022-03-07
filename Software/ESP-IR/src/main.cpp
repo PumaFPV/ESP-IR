@@ -9,7 +9,7 @@
 #define DISPLAY_PIN_DC 27
 #define DISPLAY_PIN_CS 5
 #define DISPLAY_PIN_BACKLIGHT 22
-#define DISPLAY_ROTATION 0
+#define DISPLAY_ROTATION 1
 
 #define FLIR_MOSI 13
 #define FLIR_MISO 12  
@@ -64,9 +64,10 @@ SPIClass        *flirSPI = NULL;
 void drawBufferToDisplay();
 void drawDoubxel(uint8_t x, uint8_t y, uint8_t color);
 void drawTripxel(uint8_t x, uint8_t y, uint8_t color);
-void drawQuadxel(uint8_t x, uint8_t y, uint8_t color);
+void drawQuadxel(uint8_t x, uint8_t y, uint16_t color);
+void flirLoop();
 
-uint16_t flirToGreyScale(uint8_t flirColor);
+uint16_t flirToGreyScale(uint16_t flirColor);
 
 void flirSync();
 void flirReadVOSPIPacket();
@@ -76,6 +77,7 @@ uint16_t flirPacketCRC;
 bool lastPacketWasDiscard = 0;
 uint8_t flirFrameLine = 0;
 uint8_t flirDiscardCounter = 0;
+
 #include "buffer.h"
 #include "flir.h"
 #include "display.h"
@@ -100,39 +102,15 @@ void setup()
 
 void loop() 
 {
+  flirLoop();
 
-  flirReadVOSPIPacket();
-  uint8_t discardPacket = (flirPacketID & 0x0F00) >> 8;
-
-  if(discardPacket == 0x0F) //if discard frame
+/*   for(int i = 0; i < 0xFF; i = i + 0x01)
   {
-    //discard
-    flirFrameLine = 0;
-    flirDiscardCounter++;
-  }
-  else
-  {
-    //Not discard
-    flirDiscardCounter = 0;
-    for(int i = 0; i < FLIR_VOSPI_PAYLOAD_LENGTH; i = i+2)
-    {
-      uint8_t pixel = (flirVOSPIPacket[i] << 8) | flirVOSPIPacket[i + 1]; 
-      flirBuffer[flirFrameLine][i/2] = pixel;
-    }
-    flirFrameLine++;
-  } 
-  
-  if(flirFrameLine > 59)
-  {
-    drawBufferToDisplay();
-    flirFrameLine = 0;
-  } 
-
-  if(flirDiscardCounter > 60)
-  {
-    //flirSync();
-    flirDiscardCounter = 0;
-  }
+    uint16_t color = flirToGreyScale(i);
+    display->fillScreen(color);
+    Serial.println(color, BIN);
+    delay(100);
+  } */
 }
 
 
