@@ -29,25 +29,85 @@ void setup()
   flirSetup();
  
 }
+ 
+uint16_t tempToRainbow(uint16_t temp)
+{
+  //For flir rainbow -> blue 0-63 -> red 0-63 -> blue 63-0 -> green 0-255
+  temp = temp >> 8;
+  uint8_t red = 0;
+  uint8_t green = 0;
+  uint8_t blue = 0;
+
+  if(temp < 64)
+  {
+    red = 0;
+    green = 0;
+    blue = temp / 2;
+  }
+  if((63 < temp) & (temp < 128))
+  {
+    red = (temp - 64) / 2;
+    green = 0;
+    blue = 31;
+  }
+  if((127 < temp) & (temp < 192))
+  {
+    red = 31;
+    green = 0;
+    blue = 31 - (temp - 128) / 2;
+  }
+  if((191 < temp) & (temp < 256))
+  {
+    red = 31;
+    green = (temp - 192);
+    blue = 0;
+  }
+
+  uint16_t displayPixel = (red << 11 )| (green << 5) | blue;
+
+  return displayPixel;
+}
 
 void loop() 
 {
-/*   //find 16 steps of color
-  display->fillScreen(0x0000);
-  delay(500);
-  display->fillScreen(0x701F);
-  delay(500);
-  display->fillScreen(0xA01F);
-  delay(500);
-  display->fillScreen(0xF920);
-  delay(500);
-  display->fillScreen(0xFEA0);
-  delay(500);
-  display->fillScreen(0xFFFF);
-  delay(500);
+
+/*   
+  //YUV 2nd try
+  uint8_t Y = 0b000;
+  uint8_t U = 0b1000;
+  uint8_t V = 0b00;
+
+  for(V = 0; V < 0b111111; ++V)
+  {
+    uint8_t red = constrain(Y + V + ((V*103)>>8), 0, 0b11111);
+    uint8_t green = constrain(Y - ((U * 88) >> 8) - ((V * 183 ) >> 8), 0, 0b111111);
+    uint8_t blue = constrain(Y + U + ((U* 198) >> 8), 0, 0b11111);
+
+    uint16_t displayPixel = (red << 11 )| (green << 5) | blue;
+    display->fillScreen(displayPixel);
+    display->setCursor(120,120);
+    display->setTextSize(3);
+    display->print(V);
+    delay(250);
+  }   
+*/
+
+/*   
+  //YUV 1st try
+  uint8_t Y = 0b0010;
+  uint8_t U = 0b0000;
+  uint8_t V = 0b0000;
+
+  uint8_t red = Y + 1.402 * (V - 128);
+  uint8_t green = Y - 0.34414 * (U - 128);
+  uint8_t blue = Y + 1.772 * (U -128);
+
+  uint16_t displayPixel = (red << 11 )| (green << 5) | blue;
+  display->fillScreen(displayPixel);
  */
 
 
+  //Working sample
   flirReadVOSPIPacket();  //Read VOSPI packet and put each pixel in array
 
   if((flirPacketID & 0x0F00) == FLIR_VOSPI_DISCARD_PACKET) //if packet is discard, then discard
@@ -63,27 +123,8 @@ void loop()
     {
       uint16_t flirPixel = (flirVOSPIPacket[i+1] << 8) | flirVOSPIPacket[i];  //display pixel is 16bits, 5R 6G 6B
 
-      /*
-       *flir color range goes from black, purple, pink, red, orange, yellow, white
-       *
-       * Black  0x0000
-       * Purple 0x701F
-       * Pink   0xA01F
-       * Red    0xF920
-       * Orange 0xFBC0
-       * Yellow 0xFEA0
-       * White  0xFFFF
-       */
-
-      uint8_t red;
-      uint8_t green;
-      uint8_t blue;
-
-      //pixel = pixel & 0b1111100111111110; 
-      uint16_t displayPixel = (red << 11 )| (green << 5) | blue;
-      displayPixel = flirPixel & 0b1111100111111110;
-      //displayPixel  = 
-      flirBuffer[flirFrameLine][i/2] = displayPixel;
+      //uint16_t displayPixel = flirPixel & 0b1111100111111110;
+      flirBuffer[flirFrameLine][i/2] = tempToRainbow(flirPixel);//displayPixel;
     }
     flirFrameLine++;
   } 
@@ -102,7 +143,8 @@ void loop()
     //We shouldnt reach this state
     flirSync();
     flirDiscardCounter = 0;
-  } 
+  }  
+
 }
 
 
