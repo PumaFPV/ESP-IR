@@ -45,11 +45,11 @@ const uint8_t  ledChannel = 0;
 const uint16_t ledFrequency = 5000;
 const uint8_t  ledResolution = 3; //in bits, so here 8 steps
 const uint8_t  ledBrightness = 1; // brightness can be set between 0 and 8
+uint8_t displayVerticalOffset = 10;  //Can go from 0 to 20 (we only use 60 vertical pixel altought we have 80)
 
 uint8_t flirVOSPIPacket[160];
 uint16_t flirPacketID;
 uint16_t flirPacketCRC;
-
 bool lastPacketWasDiscard = 0;
 uint8_t flirFrameLine = 0;
 uint8_t flirDiscardCounter = 0;
