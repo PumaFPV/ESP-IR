@@ -29,41 +29,45 @@ void setup()
   flirSetup();
  
 }
- 
+#define FLIR_COLOR_LIMIT_1 ((65535 / 4) * 1)
+#define FLIR_COLOR_LIMIT_2 ((65535 / 4) * 2)
+#define FLIR_COLOR_LIMIT_3 ((65535 / 4) * 3)
+#define FLIR_COLOR_LIMIT_4 ((65535 / 4) * 4)
+
+
 uint16_t tempToRainbow(uint16_t temp)
 {
   //For flir rainbow -> blue 0-63 -> red 0-63 -> blue 63-0 -> green 0-255
-  temp = temp >> 8;
+  //temp = temp >> 8;
   uint8_t red = 0;
   uint8_t green = 0;
   uint8_t blue = 0;
 
-  if(temp < 64)
+  if(temp < FLIR_COLOR_LIMIT_1)
   {
     red = 0;
     green = 0;
-    blue = temp / 2;
+    blue = temp / 256;
   }
-  if((63 < temp) & (temp < 128))
+  if((FLIR_COLOR_LIMIT_1 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_2))
   {
-    red = (temp - 64) / 2;
+    red = (temp - FLIR_COLOR_LIMIT_1) / 256;
     green = 0;
     blue = 31;
   }
-  if((127 < temp) & (temp < 192))
+  if((FLIR_COLOR_LIMIT_2 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_3))
   {
     red = 31;
     green = 0;
-    blue = 31 - (temp - 128) / 2;
+    blue = 31 - ((temp - FLIR_COLOR_LIMIT_2) / 256);
   }
-  if((191 < temp) & (temp < 256))
+  if((FLIR_COLOR_LIMIT_3 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_4))
   {
     red = 31;
-    green = (temp - 192);
+    green = (temp - FLIR_COLOR_LIMIT_3) / 256;
     blue = 0;
   }
-
-  uint16_t displayPixel = (red << 11 )| (green << 5) | blue;
+  uint16_t displayPixel = (constrain(red, 0, 0b11111) << 11 )| (constrain(green, 0, 0b111111) << 5) | constrain(blue, 0, 0b11111);
 
   return displayPixel;
 }
@@ -124,7 +128,8 @@ void loop()
       uint16_t flirPixel = (flirVOSPIPacket[i+1] << 8) | flirVOSPIPacket[i];  //display pixel is 16bits, 5R 6G 6B
 
       //uint16_t displayPixel = flirPixel & 0b1111100111111110;
-      flirBuffer[flirFrameLine][i/2] = tempToRainbow(flirPixel);//displayPixel;
+      uint16_t displayPixel = tempToRainbow(flirPixel);
+      flirBuffer[flirFrameLine][i/2] = displayPixel;
     }
     flirFrameLine++;
   } 
