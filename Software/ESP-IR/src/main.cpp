@@ -127,16 +127,19 @@ void loop()
     {
       uint16_t flirPixel = (flirVOSPIPacket[i+1] << 8) | flirVOSPIPacket[i];  //display pixel is 16bits, 5R 6G 6B
 
-      //uint16_t displayPixel = flirPixel & 0b1111100111111110;
-      uint16_t displayPixel = tempToRainbow(flirPixel);
-      flirBuffer[flirFrameLine][i/2] = displayPixel;
+      //uint16_t bufferPixelColor = flirPixel & 0b1111100111111110;
+      uint16_t bufferPixelColor = tempToRainbow(flirPixel);
+      flirBuffer[flirFrameLine][i/2] = bufferPixelColor;
     }
     flirFrameLine++;
   } 
   
   if(flirFrameLine > FLIR_VOSPI_PACKETS_PER_FRAME_RAW14_WO_TLM - 1)  //if we received a complete frame, then display buffer to display
   {
-    drawBufferToDisplay();
+    //drawLiteBuffer();
+    //drawBuffer();
+    drawSuperSampleBuffer();
+
     uint16_t flirPixel = (flirVOSPIPacket[10+1] << 8) | flirVOSPIPacket[10];  //display pixel is 16bits, 5R 6G 6B
 
     Serial.println(flirPixel, BIN);

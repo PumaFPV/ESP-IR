@@ -2,7 +2,10 @@
 at 8MHz this is 8.6fps if it was full on the  display (which isnt even the case) */
 
 void displaySetup();
-void drawBufferToDisplay();
+void drawLiteBuffer();
+void drawBuffer();
+void drawSuperSampleBuffer();
+void drawBixel(uint8_t x, uint8_t y, uint16_t color);
 void drawQuadxel(uint8_t x, uint8_t y, uint16_t color);
 
 void displaySetup()
@@ -15,7 +18,20 @@ void displaySetup()
   ledcWrite(ledChannel, ledBrightness); 
 }
 
-void drawBufferToDisplay()
+void drawLiteBuffer()
+{
+  display->startWrite();
+  for(uint8_t x = 0; x < 60; ++x)
+  {
+    for(uint8_t y = 0; y < 60; ++y)
+    {
+      display->writePixel(x + 90, y + 90, flirBuffer[x][y + displayVerticalOffset]);
+    }
+  }
+  display->endWrite();
+}
+
+void drawBuffer()
 {
   display->startWrite();
 
@@ -28,6 +44,32 @@ void drawBufferToDisplay()
   }
 
   display->endWrite();
+}
+
+void drawSuperSampleBuffer()
+{
+  display->startWrite();
+
+  for(uint8_t x = 0; x < 60; ++x)
+  {
+    for(uint8_t y = 0; y < 60; ++y)
+    {
+      drawBixel(x * 4 + 1, y * 4 + 1, flirBuffer[x][y + displayVerticalOffset]);
+    }
+  }
+
+  display->endWrite();
+}
+
+void drawBixel(uint8_t x, uint8_t y, uint16_t color)
+{
+  for(uint8_t x_offset = 0; x_offset < 2; x_offset++)
+  {
+    for(uint8_t y_offset = 0; y_offset < 2; y_offset++)
+    {
+      display->writePixel(x + x_offset, y + y_offset, color);
+    }
+  }
 }
 
 void drawQuadxel(uint8_t x, uint8_t y, uint16_t color)
