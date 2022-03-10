@@ -72,6 +72,8 @@ uint16_t tempToRainbow(uint16_t temp)
   return displayPixel;
 }
 
+uint8_t bufferType = 0;
+
 void loop() 
 {
 
@@ -136,8 +138,26 @@ void loop()
   
   if(flirFrameLine > FLIR_VOSPI_PACKETS_PER_FRAME_RAW14_WO_TLM - 1)  //if we received a complete frame, then display buffer to display
   {
-    //drawLiteBuffer();
-    //drawBuffer();
+/* 
+    if(bufferType < 40)
+    {
+      drawLiteBuffer();
+    }
+    else if(bufferType < 60)
+    {
+      drawBuffer();
+    }
+    else if(bufferType < 80)
+    {
+      drawSuperSampleBuffer();
+    }
+    else if (bufferType == 120)
+    {
+      bufferType = 0;
+    }
+
+    bufferType++; 
+*/
     drawSuperSampleBuffer();
 
     uint16_t flirPixel = (flirVOSPIPacket[10+1] << 8) | flirVOSPIPacket[10];  //display pixel is 16bits, 5R 6G 6B

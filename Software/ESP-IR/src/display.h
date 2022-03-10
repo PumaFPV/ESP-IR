@@ -52,9 +52,33 @@ void drawSuperSampleBuffer()
 
   for(uint8_t x = 0; x < 60; ++x)
   {
-    for(uint8_t y = 0; y < 60; ++y)
+    for(uint8_t yDisplay = 0; yDisplay < 60; ++yDisplay)
     {
-      drawBixel(x * 4 + 1, y * 4 + 1, flirBuffer[x][y + displayVerticalOffset]);
+      uint8_t y = yDisplay; //+ displayVerticalOffset;
+
+      uint8_t xQuad = x * 4;
+      uint8_t yQuad = y * 4;
+
+      uint16_t colorTopLeft =     flirBuffer[x][y]/4 + flirBuffer[x-1][y]/4 + flirBuffer[x-1][y-1]/4 + flirBuffer[x][y-1]/4;
+      uint16_t colorTop =         flirBuffer[x][y]/2 + flirBuffer[x][y-1]/2;
+      uint16_t colorTopRight =    flirBuffer[x][y]/4 + flirBuffer[x][y-1]/4 + flirBuffer[x+1][y-1]/4 + flirBuffer[x+1][y]/4;
+      uint16_t colorLeft =        flirBuffer[x][y]/2 + flirBuffer[x-1][y]/2;
+      uint16_t colorRight =       flirBuffer[x][y]/2 + flirBuffer[x+1][y]/2;
+      uint16_t colorBottomLeft =  flirBuffer[x][y]/4 + flirBuffer[x][y+1]/4 + flirBuffer[x-1][y+1]/4 + flirBuffer[x-1][y]/4;
+      uint16_t colorBottom =      flirBuffer[x][y]/2 + flirBuffer[x][y+1]/2;
+      uint16_t colorBottomRight = flirBuffer[x][y]/4 + flirBuffer[x+1][y]/4 + flirBuffer[x+1][y+1]/4 + flirBuffer[x][y+1]/4;
+      
+      display->writePixel(xQuad,     yQuad,                           colorTopLeft);
+      display->writeLine( xQuad + 1, yQuad,     xQuad + 2, yQuad,     colorTop);
+      display->writePixel(xQuad + 3, yQuad,                           colorTopRight);
+      display->writeLine( xQuad,     yQuad + 1, xQuad,     yQuad + 2, colorLeft);
+      display->writeLine( xQuad + 3, yQuad + 1, xQuad + 3, yQuad + 2, colorRight);
+      display->writePixel(xQuad,     yQuad + 3,                       colorBottomLeft);
+      display->writeLine( xQuad + 1, yQuad + 3, xQuad + 2, yQuad + 3, colorBottom);
+      display->writePixel(xQuad + 3, yQuad + 3,                       colorBottomRight);
+
+      drawBixel(xQuad + 1, yQuad + 1, flirBuffer[x][y]);
+
     }
   }
 
