@@ -1,3 +1,5 @@
+void agc_enable();
+
 void flirReadVOSPIPacket();
 void flirSync();
 

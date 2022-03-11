@@ -14,7 +14,6 @@ Arduino_DataBus *bus = create_default_Arduino_DataBus();
 Arduino_GFX     *display = new Arduino_GC9A01(bus, DISPLAY_PIN_RESET, DISPLAY_ROTATION, true /*IPS needs to be true to have correct colors on GC9A01*/);
 SPIClass        *flirSPI = NULL;
 
-
 #include "buffer.h"
 #include "display.h"
 #include "flir.h"
@@ -27,49 +26,33 @@ void setup()
   displaySetup();
 
   flirSetup();
- 
+  Wire.begin(FLIR_SDA, FLIR_SCL, FLIR_I2C_FREQUENCY);
+  agc_enable();
+
 }
-#define FLIR_COLOR_LIMIT_1 ((65535 / 4) * 1)
-#define FLIR_COLOR_LIMIT_2 ((65535 / 4) * 2)
-#define FLIR_COLOR_LIMIT_3 ((65535 / 4) * 3)
-#define FLIR_COLOR_LIMIT_4 ((65535 / 4) * 4)
 
-
-uint16_t tempToRainbow(uint16_t temp)
+uint16_t readFlirRegister(uint16_t address)
 {
-  //For flir rainbow -> blue 0-63 -> red 0-63 -> blue 63-0 -> green 0-255
-  //temp = temp >> 8;
-  uint8_t red = 0;
-  uint8_t green = 0;
-  uint8_t blue = 0;
+  Wire.beginTransmission(FLIR_I2C_ADDRESS);
+  Wire.write(0x00);
+  Wire.write(0x04);
+}
 
-  if(temp < FLIR_COLOR_LIMIT_1)
-  {
-    red = 0;
-    green = 0;
-    blue = temp / 256;
-  }
-  if((FLIR_COLOR_LIMIT_1 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_2))
-  {
-    red = (temp - FLIR_COLOR_LIMIT_1) / 256;
-    green = 0;
-    blue = 31;
-  }
-  if((FLIR_COLOR_LIMIT_2 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_3))
-  {
-    red = 31;
-    green = 0;
-    blue = 31 - ((temp - FLIR_COLOR_LIMIT_2) / 256);
-  }
-  if((FLIR_COLOR_LIMIT_3 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_4))
-  {
-    red = 31;
-    green = (temp - FLIR_COLOR_LIMIT_3) / 256;
-    blue = 0;
-  }
-  uint16_t displayPixel = (constrain(red, 0, 0b11111) << 11 )| (constrain(green, 0, 0b111111) << 5) | constrain(blue, 0, 0b11111);
+void agc_enable()
+{
+  byte error;
+  Wire.beginTransmission(FLIR_I2C_ADDRESS); // transmit to device #4
+  Wire.write(0x01);
+  Wire.write(0x05);
+  Wire.write(0x00);
+  Wire.write(0x01);
 
-  return displayPixel;
+  error = Wire.endTransmission();    // stop transmitting
+  if (error != 0)
+  {
+    Serial.print("error=");
+    Serial.println(error);
+  }
 }
 
 uint8_t bufferType = 0;
