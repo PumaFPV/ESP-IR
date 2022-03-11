@@ -47,6 +47,22 @@ void drawBuffer()
   display->endWrite();
 }
 
+void drawBufferOptimized()
+{
+  display->startWrite();
+
+  for(int i = 0; i < 60; i++)
+  {
+    for(int j = 0; j < 60; j++)
+    {
+      display->writeFillRect(i * 4 + 1, j * 4 + 1, 4, 4, flirBuffer[i][j + displayVerticalOffset]);
+    }
+  }
+
+  display->endWrite();
+}
+
+
 void drawSuperSampleBuffer()
 {
   display->startWrite();
