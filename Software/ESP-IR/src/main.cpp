@@ -41,6 +41,8 @@ uint16_t readFlirRegister(uint16_t address)
 void agc_enable()
 {
   byte error;
+
+
   Wire.beginTransmission(FLIR_I2C_ADDRESS); // transmit to device #4
   Wire.write(0x01);
   Wire.write(0x05);
@@ -121,32 +123,19 @@ void loop()
   
   if(flirFrameLine > FLIR_VOSPI_PACKETS_PER_FRAME_RAW14_WO_TLM - 1)  //if we received a complete frame, then display buffer to display
   {
-/* 
-    if(bufferType < 40)
-    {
-      drawLiteBuffer();
-    }
-    else if(bufferType < 60)
-    {
-      drawBuffer();
-    }
-    else if(bufferType < 80)
-    {
-      drawSuperSampleBuffer();
-    }
-    else if (bufferType == 120)
-    {
-      bufferType = 0;
-    }
+    //drawLiteBuffer(); //490ms/frame
+    //drawBuffer(); //655ms/frame
+    //drawBufferOptimized(); //501ms/frame
+    drawSuperSampleBuffer();  //347ms/frame but white frame every 4 frame
 
-    bufferType++; 
-*/
-    drawSuperSampleBuffer();
+    display->setCursor(120,120);
+    display->setTextSize(3);
+    unsigned long currentFrameMillis = millis();
+    refreshRate = (currentFrameMillis - lastFrameMillis);
+    //display->print(refreshRate);
 
-    uint16_t flirPixel = (flirVOSPIPacket[10+1] << 8) | flirVOSPIPacket[10];  //display pixel is 16bits, 5R 6G 6B
-
-    Serial.println(flirPixel, BIN);
     flirFrameLine = 0;
+    lastFrameMillis = currentFrameMillis;
   } 
 
   if(flirDiscardCounter > 60)

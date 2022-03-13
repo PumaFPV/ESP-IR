@@ -62,7 +62,6 @@ void drawBufferOptimized()
   display->endWrite();
 }
 
-
 void drawSuperSampleBuffer()
 {
   display->startWrite();
@@ -71,7 +70,7 @@ void drawSuperSampleBuffer()
   {
     for(uint8_t yDisplay = 0; yDisplay < 60; ++yDisplay)
     {
-      uint8_t y = yDisplay; //+ displayVerticalOffset;
+      uint8_t y = yDisplay;
 
       uint8_t xQuad = x * 4;
       uint8_t yQuad = y * 4;
@@ -84,21 +83,22 @@ void drawSuperSampleBuffer()
       uint16_t colorBottomLeft =  flirBuffer[x][y]/4 + flirBuffer[x][y+1]/4 + flirBuffer[x-1][y+1]/4 + flirBuffer[x-1][y]/4;
       uint16_t colorBottom =      flirBuffer[x][y]/2 + flirBuffer[x][y+1]/2;
       uint16_t colorBottomRight = flirBuffer[x][y]/4 + flirBuffer[x+1][y]/4 + flirBuffer[x+1][y+1]/4 + flirBuffer[x][y+1]/4;
-      
-      display->writePixel(xQuad,     yQuad,                           colorTopLeft);
-      display->writeLine( xQuad + 1, yQuad,     xQuad + 2, yQuad,     colorTop);
-      display->writePixel(xQuad + 3, yQuad,                           colorTopRight);
-      display->writeLine( xQuad,     yQuad + 1, xQuad,     yQuad + 2, colorLeft);
-      display->writeLine( xQuad + 3, yQuad + 1, xQuad + 3, yQuad + 2, colorRight);
-      display->writePixel(xQuad,     yQuad + 3,                       colorBottomLeft);
-      display->writeLine( xQuad + 1, yQuad + 3, xQuad + 2, yQuad + 3, colorBottom);
-      display->writePixel(xQuad + 3, yQuad + 3,                       colorBottomRight);
 
+      display->writePixel(   xQuad,     yQuad,                           colorTopLeft);
+      display->writeFastHLine(    xQuad + 1, yQuad, 2,     colorTop);
+      display->writePixel(   xQuad + 3, yQuad,                           colorTopRight);
+      display->writeFastVLine(    xQuad,     yQuad + 1,  2, colorLeft);
+      display->writeFastVLine(    xQuad + 3, yQuad + 1, 2, colorRight);
+      display->writePixel(   xQuad,     yQuad + 3,                       colorBottomLeft);
+      display->writeFastHLine(    xQuad + 1, yQuad + 3, 2, colorBottom);
+      display->writePixel(   xQuad + 3, yQuad + 3,                       colorBottomRight);
+      //display->writeFastHLine(xQuad + 1, yQuad + 1, 2, flirBuffer[x][y]);
+      //display->writeFastHLine(xQuad + 1, yQuad + 2, 2, flirBuffer[x][y]);
+      //display->writeFillRect(xQuad + 1, yQuad + 1, 2, 2, flirBuffer[x][y]);
       drawBixel(xQuad + 1, yQuad + 1, flirBuffer[x][y]);
 
     }
   }
-
   display->endWrite();
 }
 
@@ -153,15 +153,16 @@ uint16_t tempToRainbow(uint16_t temp)
   {
     red = 31;
     green = 0;
-    blue = 31 - ((temp - FLIR_COLOR_LIMIT_2) / 256);
+    blue = 31 - ((temp - FLIR_COLOR_LIMIT_2 ) / 256);
   }
   if((FLIR_COLOR_LIMIT_3 - 1 < temp) & (temp < FLIR_COLOR_LIMIT_4))
   {
     red = 31;
-    green = (temp - FLIR_COLOR_LIMIT_3) / 256;
+    green = (temp - FLIR_COLOR_LIMIT_3 - 1) / 256;
     blue = 0;
   }
-  uint16_t displayPixel = (constrain(red, 0, 0b11111) << 11 )| (constrain(green, 0, 0b111111) << 5) | constrain(blue, 0, 0b11111);
+
+  uint16_t displayPixel = (red << 11 )| (green << 5) | blue;
 
   return displayPixel;
 }
