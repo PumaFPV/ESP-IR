@@ -42,7 +42,6 @@ void agc_enable()
 {
   byte error;
 
-
   Wire.beginTransmission(FLIR_I2C_ADDRESS); // transmit to device #4
   Wire.write(0x01);
   Wire.write(0x05);
