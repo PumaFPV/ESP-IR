@@ -4,7 +4,7 @@ Made for AI_Thinker ESP_CAM board
 
 #include "Arduino.h"
 
-#include "esp_camera.h"
+ #include "esp_camera.h"
 #include <WiFi.h>
 
 #define CAMERA_MODEL_AI_THINKER // Has PSRAM
